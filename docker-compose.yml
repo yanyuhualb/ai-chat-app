@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai_chat_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ai_chat_app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai_chat_network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: ai_chat_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai_chat_network
+
+  # FastAPI后端
+  backend:
+    build: ./backend
+    container_name: ai_chat_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/ai_chat_app
+      - DATABASE_URL_SYNC=postgresql://postgres:password@postgres:5432/ai_chat_app
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ai_chat_network
+
+  # Celery Worker
+  celery_worker:
+    build: ./backend
+    container_name: ai_chat_celery_worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/ai_chat_app
+      - DATABASE_URL_SYNC=postgresql://postgres:password@postgres:5432/ai_chat_app
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ai_chat_network
+
+  # Celery Beat
+  celery_beat:
+    build: ./backend
+    container_name: ai_chat_celery_beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    volumes:
+      - ./backend:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+    networks:
+      - ai_chat_network
+
+networks:
+  ai_chat_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

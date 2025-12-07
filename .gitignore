@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# FastAPI
+*.db
+*.sqlite
+
+# 环境变量文件（包含敏感信息）
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+logs/
+
+# 数据库数据
+postgres_data/
+redis_data/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# React Native
+mobile/node_modules/
+mobile/.expo/
+mobile/.expo-shared/
+mobile/dist/
+mobile/npm-debug.*
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.orig.*
+mobile/web-build/
+
+# macOS
+mobile/ios/Pods/
+mobile/ios/build/
+
+# Android
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+
+# Firebase
+firebase-credentials.json
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker volumes
+postgres_data
+redis_data
